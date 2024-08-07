@@ -6,11 +6,11 @@ do_help() {
 }
 
 do_list() {
-    connmanctl services | sed 's/^...[ ]*//' | awk -F '[ ]*[ ]wifi_[[:alnum:]]*_' '{if (NF==2) print $1}' | sort -u # remove duplicates (a single wifi can appear under 2 interfaces)
+    sudo nmcli -f SSID dev wifi | sed '1d' | grep -v '^--' | sort -u # remove duplicates (a single wifi can appear under 2 interfaces)
 }
 
 do_scanlist() {
-    connmanctl scan wifi >/dev/null 2>/dev/null
+    sudo nmcli -f SSID dev wifi >/dev/null 2>/dev/null
     do_list
 }
 
@@ -34,12 +34,10 @@ case "${ACTION}" in
 	/etc/init.d/S08connman restart
 	;;
     "enable")
-	batocera-settings-set wifi.enabled 1
+	sudo ifup wlan0
 	if [ "$#" -eq 2 ]; then
-		batocera-settings-set wifi.ssid "$1"
-		batocera-settings-set wifi.key "$2"
+        sudo nmcli device wifi connect "$1" password "$2"
 	fi
-	/etc/init.d/S08connman reload
 
 	# wait up to 5 sec for an IP address
 	N=0
@@ -53,7 +51,7 @@ case "${ACTION}" in
 
 	;;
     "disable")
-	batocera-settings-set wifi.enabled 0
+	sudo ifdown wlan0
 	/etc/init.d/S08connman reload
 	;;
 	*)
