@@ -1,4 +1,16 @@
 #!/bin/sh
 
+# Find the right DRI render node for pi5 with DSI
+for i in /dev/dri/render*; do
+    if [ -e $i ]; then
+        # If a device exists with the render prefix, assign it to a variable
+        render_device=$i
+        break
+    fi
+done
+
+# Test and export environment var
+test -e $render_device && export WLR_RENDER_DRM_DEVICE=$render_device
+
 SWAY_LOG_FILE=/userdata/system/logs/sway.log
 WLR_LIBINPUT_NO_DEVICES=1 /usr/bin/sway -d > ${SWAY_LOG_FILE} 2>&1
